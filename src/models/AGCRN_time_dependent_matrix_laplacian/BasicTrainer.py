@@ -8,7 +8,6 @@ import numpy as np
 from utils import evaluate_metrics
 import logging
 import os
-import wandb
 
 
 class Trainer(object):
@@ -87,8 +86,6 @@ class Trainer(object):
         for metric, value in avg_metrics.items():
             self.logger.info(f"Validate_Average {metric}: {value}")
 
-        wandb.log({**avg_metrics, "epoch": epoch})
-
         return val_loss
 
     def train_epoch(self, epoch):
@@ -137,15 +134,6 @@ class Trainer(object):
             if self.lr_scheduler is not None:
                 self.lr_scheduler.step()
             val_epoch_loss = self.val_epoch(epoch)
-
-            # Log metrics to wandb
-            wandb.log(
-                {
-                    "epoch": epoch,
-                    "train_loss": train_epoch_loss,
-                    "val_loss": val_epoch_loss,
-                }
-            )
 
             train_loss_list.append(train_epoch_loss)
             val_loss_list.append(val_epoch_loss)
@@ -197,8 +185,6 @@ class Trainer(object):
         self.model.load_state_dict(best_model)
         self.test(self.model, self.args, self.test_loader, self.scaler, self.logger)
 
-        wandb.run.summary["best_loss"] = best_loss
-
         return best_loss
 
     @staticmethod
@@ -243,9 +229,5 @@ class Trainer(object):
 
         for metric, value in avg_metrics.items():
             logger.info(f"Test_New_Average {metric}: {value}")
-
-        # Update the wandb summary with test results
-        for key, value in avg_metrics.items():
-            wandb.run.summary[key] = value
 
         logger.info(f"Lag: {args.lag}, Horizon: {args.horizon}")
