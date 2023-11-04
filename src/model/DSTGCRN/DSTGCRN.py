@@ -1,3 +1,10 @@
+"""
+Description:
+    Architecture of the DSTGCRN (Dynamic Spatial-Temporal Graph Convolutional Recurrent Network) model.
+    Note: Code segments are adapted from 'https://github.com/LeiBAI/AGCRN' and 'https://github.com/wengwenchao123/DDGCRN'
+Authors:
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -101,21 +108,11 @@ class AVWGCN(nn.Module):
 
     @staticmethod
     def get_laplacian(graph, I, normalize=True):
-        """
-        return the laplacian of the graph.
-
-        :param graph: the graph structure without self loop, [N, N].
-        :param normalize: whether to used the normalized laplacian.
-        :return: graph laplacian.
-        """
         if normalize:
             graph = graph + I
             D = torch.diag_embed(torch.sum(graph, dim=-1) ** (-1 / 2))
             L = torch.matmul(torch.matmul(D, graph), D)
-        else:
-            graph = graph + I
-            D = torch.diag_embed(torch.sum(graph, dim=-1) ** (-1 / 2))
-            L = torch.matmul(torch.matmul(D, graph), D)
+
         return L
 
 
