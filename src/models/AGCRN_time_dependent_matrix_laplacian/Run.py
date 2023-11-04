@@ -133,10 +133,7 @@ def main(args: DictConfig) -> None:
             args,
             lr_scheduler=lr_scheduler,
         )
-        trainer.train()
-        trainer.test(
-            model, trainer.args, trainer.test_loader, trainer.scaler, trainer.logger
-        )
+        trainer.train()  # test phase involved in the train
 
 
 if __name__ == "__main__":

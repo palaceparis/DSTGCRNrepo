@@ -18,7 +18,7 @@
       "program": "${workspaceFolder}/src/models/AGCRN_time_dependent_matrix_laplacian/Run.py",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "args": ["wandb_mode=disabled", "dataset=CN"]
+      "args": ["dataset=CN"]
     }
   ]
 }

@@ -47,15 +47,6 @@ class AVWGCN(nn.Module):
             supports = AVWGCN.get_laplacian(
                 F.relu(torch.matmul(nodevec, nodevec.transpose(2, 1))), supports1
             )
-            # supports3 = AVWGCN.get_laplacian(
-            #     F.relu(torch.matmul(nodevec, nodevec.transpose(2, 1))), supports2
-            # )
-
-            # x_g1 = torch.einsum("nm,bmc->bnc", supports1, x)
-            # x_g2 = torch.einsum("bnm,bmc->bnc", supports2, x)
-            # x_g3 = torch.einsum("bnm,bmc->bnc", supports3, x)
-
-            # x_g = torch.stack([x_g1, x_g2, x_g3], dim=1)
 
             support_set = [supports1, supports]
             # default cheb_k = 3

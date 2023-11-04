@@ -201,10 +201,6 @@ class Trainer(object):
                 y_pred.append(output.cpu().numpy())  # added cpu().numpy()
 
         # Apply the inverse transformation after converting tensors to numpy and concatenating
-        adj = np.concatenate(adjs, axis=0)
-        if args.saved_model_path is not None:
-            np.save("data/processed/adj.npy", adj)
-
         y_true = np.concatenate(y_true, axis=0)
         y_pred = np.concatenate(y_pred, axis=0)
 

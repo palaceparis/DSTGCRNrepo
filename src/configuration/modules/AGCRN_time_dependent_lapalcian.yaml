@@ -1,7 +1,8 @@
 seed: 42
 
 # data
-# num_nodes: 28 # 28 For EU, 31 for CN, 51 for US
+# num_nodes: 28 For EU, 31 for CN, 51 for US
+
 val_ratio: 0.1
 test_ratio: 0.1
 
@@ -11,18 +12,18 @@ column_wise: True
 
 # model:
 lag: 7
-horizon: 1
+horizon: 2
 
 input_dim: 20
 output_dim: 1
 
 embed_dim: 32
-rnn_units: 64 # 64
-num_layers: 1 # 1
+rnn_units: 64
+num_layers: 1
 cheb_k: 3
 
 # GRU layer
-hidden_dim_node: 16 # 16
+hidden_dim_node: 16
 num_layers_node: 1
 
 # attention layer
@@ -31,7 +32,7 @@ num_heads: 2
 loss_func: mse
 
 batch_size: 32
-epochs: 300
+epochs: 10
 
 lr_init: 4.225775196829383e-05
 lr_decay: False
@@ -58,9 +59,9 @@ device: cuda:0
 log_step: 20
 
 # Albation study
-TNE: False
-dynamic_embed: True
-attention_layer: True
-gru_layer: True
+TNE: False # Time Specific (naive solution)
+dynamic_embed: True # Static or not
+attention_layer: True # Attention layer in the dynamic module -> w/o Attention
+gru_layer: True # GRU layer in the dynamic module -> w/o GRU
 saved_model_path: # outputs/AGCRN_time_dependent_matrix_laplacian/06-29_11-08-05_DSTGCRN_1d_test_seed42/best_model.pth
 
