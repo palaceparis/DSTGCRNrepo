@@ -1,9 +1,5 @@
 seed: 42
 
-# autotuning
-hyperopt_tuning: False
-n_trials: 90
-
 # data
 # num_nodes: 28 # 28 For EU, 31 for CN, 51 for US
 val_ratio: 0.1
