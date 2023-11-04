@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from DSTGCRN import DSTGCRN as Network
-from BasicTrainer import Trainer
+from trainer import Trainer
 from lib.dataloader import get_dataloader
 import hydra
 from omegaconf import DictConfig
