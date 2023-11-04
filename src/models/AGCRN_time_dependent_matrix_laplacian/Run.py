@@ -6,7 +6,6 @@ from lib.dataloader import get_dataloader
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import logging
-import wandb
 import os
 
 import random
