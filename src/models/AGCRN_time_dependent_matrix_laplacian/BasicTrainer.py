@@ -185,8 +185,6 @@ class Trainer(object):
         self.model.load_state_dict(best_model)
         self.test(self.model, self.args, self.test_loader, self.scaler, self.logger)
 
-        return best_loss
-
     @staticmethod
     def test(model, args, test_loader, scaler, logger):
         model.eval()

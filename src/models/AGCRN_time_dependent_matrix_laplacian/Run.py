@@ -96,6 +96,7 @@ def main(args: DictConfig) -> None:
             optimizer=optimizer, milestones=lr_decay_steps, gamma=args.lr_decay_rate
         )
 
+    # Load the checkpoint
     if args.saved_model_path is not None:
         logging.info("Loading saved model from {}".format(args.saved_model_path))
         model.load_state_dict(torch.load(args.saved_model_path))
@@ -120,7 +121,7 @@ def main(args: DictConfig) -> None:
         )
         return {"loss": test_loss, "status": STATUS_OK}
     else:
-        # start training
+        # Train from the start
         trainer = Trainer(
             model,
             loss,
@@ -132,7 +133,7 @@ def main(args: DictConfig) -> None:
             args,
             lr_scheduler=lr_scheduler,
         )
-        _ = trainer.train()
+        trainer.train()
         trainer.test(
             model, trainer.args, trainer.test_loader, trainer.scaler, trainer.logger
         )
