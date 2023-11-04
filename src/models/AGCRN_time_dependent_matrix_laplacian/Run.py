@@ -17,7 +17,12 @@ import math
 logging.basicConfig(level=logging.INFO)
 
 
-def objective_function(tuned_args: DictConfig, args: DictConfig) -> float:
+@hydra.main(
+    version_base=None,
+    config_path="../../configuration/modules",
+    config_name="AGCRN_time_dependent_lapalcian",
+)
+def main(args: DictConfig) -> None:
     # Random seed
     random.seed(args.seed)
     torch.cuda.cudnn_enabled = False
@@ -128,75 +133,10 @@ def objective_function(tuned_args: DictConfig, args: DictConfig) -> float:
             args,
             lr_scheduler=lr_scheduler,
         )
-        best_loss = trainer.train()
-
-        return {"loss": best_loss, "status": STATUS_OK}
-
-
-@hydra.main(
-    version_base=None,
-    config_path="../../configuration/modules",
-    config_name="AGCRN_time_dependent_lapalcian",
-)
-def main(args: DictConfig) -> None:
-    # Wandb
-    os.environ["WANDB_DIR"] = args.wandb_dir
-    if args.saved_model_path is not None:
-        os.environ["WANDB_MODE"] = "dryrun"
-    else:
-        os.environ["WANDB_MODE"] = args.wandb_mode
-
-    if not args.hyperopt_tuning:
-        tuned_args = args
-        each_run_name = args.run_name
-        wandb.init(project="AGCRN_dynamic_tune", name=each_run_name)
-        wandb.config = OmegaConf.to_container(args, resolve=True, throw_on_missing=True)
-        objective_function(tuned_args, args)
-        wandb.run.finish()
-
-    else:
-        space = {
-            "lr_init": hp.loguniform(
-                "lr_init",
-                math.log(1.0e-05),
-                math.log(1.0e-02),
-            ),
-            "num_layers": hp.choice("num_layers", [1, 2]),
-            # "cheb_k": hp.choice("cheb_k", [1, 2, 3]),
-            "rnn_units": hp.choice("rnn_units", [8, 16, 32, 64]),
-            "embed_dim": hp.choice("embed_dim", [8, 16, 32, 64]),
-            "hidden_dim_node": hp.choice("hidden_dim_node", [2, 4, 8, 16, 32, 64, 128]),
-            "num_layers_node": hp.choice("num_layers_node", [1, 2, 3, 4, 5, 6]),
-            # "num_heads": hp.choice("num_heads", [1, 2, 4]),
-            # "input_dim": hp.choice("input_dim", [2, 3, 4, 5, 6]),
-        }
-
-        trials = Trials()
-        trial_counter = [0]
-
-        def objective_with_args_fixed(tuned_args):
-            # Starting a new wandb run
-            each_run_name = args.run_name + f"_trial_{trial_counter[0]}"
-            wandb.init(
-                project="AGCRN_dynamic_tune", name=each_run_name, reinit=True
-            )  # reinit=True allows multiple wandb.init() calls
-            wandb.config = OmegaConf.to_container(
-                args, resolve=True, throw_on_missing=True
-            )
-            result = objective_function(tuned_args, args)
-            wandb.run.finish()
-            trial_counter[0] += 1  # Increment the trial counter
-            return result
-
-        best = fmin(
-            objective_with_args_fixed,
-            space=space,
-            algo=tpe.suggest,
-            max_evals=args.n_trials,
-            trials=trials,
+        _ = trainer.train()
+        trainer.test(
+            model, trainer.args, trainer.test_loader, trainer.scaler, trainer.logger
         )
-
-        logging.info(best)
 
 
 if __name__ == "__main__":
