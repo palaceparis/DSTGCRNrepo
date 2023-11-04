@@ -1,8 +1,7 @@
 import torch
-import numpy as np
 import torch.utils.data
 from lib.add_window import Add_Window_Horizon
-from lib.load_dataset import load_st_dataset
+from lib.load_dataset import load_and_transform_data
 from lib.normalization import (
     NScaler,
     MinMax01Scaler,
@@ -10,6 +9,7 @@ from lib.normalization import (
     StandardScaler,
     ColumnMinMaxScaler,
 )
+import numpy as np
 
 
 def normalize_dataset(data, normalizer, column_wise=False):
@@ -58,21 +58,6 @@ def normalize_dataset(data, normalizer, column_wise=False):
     return data, scaler
 
 
-def split_data_by_days(data, val_days, test_days, interval=60):
-    """
-    :param data: [B, *]
-    :param val_days:
-    :param test_days:
-    :param interval: interval (15, 30, 60) minutes
-    :return:
-    """
-    T = int((24 * 60) / interval)
-    test_data = data[-T * test_days :]
-    val_data = data[-T * (test_days + val_days) : -T * test_days]
-    train_data = data[: -T * (test_days + val_days)]
-    return train_data, val_data, test_data
-
-
 def split_data_by_ratio(data, val_ratio, test_ratio):
     data_len = data.shape[0]
     test_data = data[-int(data_len * test_ratio) :]
@@ -83,7 +68,7 @@ def split_data_by_ratio(data, val_ratio, test_ratio):
     return train_data, val_data, test_data
 
 
-def data_loader(X, Y, batch_size, shuffle=True, drop_last=True):
+def data_loader(X, Y, batch_size, shuffle=False, drop_last=False):
     cuda = True if torch.cuda.is_available() else False
     TensorFloat = torch.cuda.FloatTensor if cuda else torch.FloatTensor
     X, Y = TensorFloat(X), TensorFloat(Y)
@@ -94,67 +79,74 @@ def data_loader(X, Y, batch_size, shuffle=True, drop_last=True):
     return dataloader
 
 
-def get_dataloader(
-    args, normalizer="std", tod=False, dow=False, weather=False, single=True
-):
-    # load raw st dataset
-    data = load_st_dataset(args.dataset)  # B, N, D
+def get_dataloader(args, normalizer="std", single=True):
+    data = load_and_transform_data(args)  # B, N, D
+
+    data_train, data_val, data_test = split_data_by_ratio(
+        data, args.val_ratio, args.test_ratio
+    )
+
+    # Save the arrays
+    if args.save_arrays_EDA:
+        np.save("data/processed/DSTGCRN/data_train.npy", data_train)
+        np.save("data/processed/DSTGCRN/data_val.npy", data_val)
+        np.save("data/DSTGCRN/data_test.npy", data_test)
+
     # normalize st data
-    data, scaler = normalize_dataset(data, normalizer, args.column_wise)
-    # spilit dataset by days or by ratio
-    if args.test_ratio > 1:
-        data_train, data_val, data_test = split_data_by_days(
-            data, args.val_ratio, args.test_ratio
-        )
-    else:
-        data_train, data_val, data_test = split_data_by_ratio(
-            data, args.val_ratio, args.test_ratio
-        )
+    data_train[:, :, : args.normalizd_col], scaler = normalize_dataset(
+        data_train[:, :, : args.normalizd_col], normalizer, args.column_wise
+    )
+    data_val[:, :, : args.normalizd_col], _ = normalize_dataset(
+        data_val[:, :, : args.normalizd_col], normalizer, args.column_wise
+    )
+    data_test[:, :, : args.normalizd_col], _ = normalize_dataset(
+        data_test[:, :, : args.normalizd_col], normalizer, args.column_wise
+    )
+
     # add time window
-    x_tra, y_tra = Add_Window_Horizon(data_train, args.lag, args.horizon, single)
-    x_val, y_val = Add_Window_Horizon(data_val, args.lag, args.horizon, single)
-    x_test, y_test = Add_Window_Horizon(data_test, args.lag, args.horizon, single)
+    if args.horizon == 1:
+        x_tra, y_tra = Add_Window_Horizon(data_train, args.lag, args.horizon, single)
+        x_val, y_val = Add_Window_Horizon(data_val, args.lag, args.horizon, single)
+        x_test, y_test = Add_Window_Horizon(data_test, args.lag, args.horizon, single)
+    else:
+        x_tra, y_tra = Add_Window_Horizon(
+            data_train, args.lag, args.horizon, single=False
+        )
+        x_val, y_val = Add_Window_Horizon(
+            data_val, args.lag, args.horizon, single=False
+        )
+        x_test, y_test = Add_Window_Horizon(
+            data_test, args.lag, args.horizon, single=False
+        )
+
     print("Train: ", x_tra.shape, y_tra.shape)
     print("Val: ", x_val.shape, y_val.shape)
     print("Test: ", x_test.shape, y_test.shape)
-    ##############get dataloader######################
-    train_dataloader = data_loader(
-        x_tra, y_tra, args.batch_size, shuffle=True, drop_last=True
-    )
-    if len(x_val) == 0:
-        val_dataloader = None
+
+    if not args.TNE:
+        train_dataloader = data_loader(
+            x_tra, y_tra, args.batch_size, shuffle=False, drop_last=True
+        )
+        val_dataloader = data_loader(
+            x_val, y_val, args.batch_size, shuffle=False, drop_last=False
+        )
+        test_dataloader = data_loader(
+            x_test, y_test, args.batch_size, shuffle=False, drop_last=False
+        )
     else:
+        train_dataloader = data_loader(
+            x_tra, y_tra, args.batch_size, shuffle=False, drop_last=True
+        )
         val_dataloader = data_loader(
             x_val, y_val, args.batch_size, shuffle=False, drop_last=True
         )
-    test_dataloader = data_loader(
-        x_test, y_test, args.batch_size, shuffle=False, drop_last=False
-    )
-    return train_dataloader, val_dataloader, test_dataloader, scaler
+        test_dataloader = data_loader(
+            x_test, y_test, args.batch_size, shuffle=False, drop_last=True
+        )
 
-
-if __name__ == "__main__":
-    import argparse
-
-    # MetrLA 207; BikeNYC 128; SIGIR_solar 137; SIGIR_electric 321
-    DATASET = "SIGIR_electric"
-    if DATASET == "MetrLA":
-        NODE_NUM = 207
-    elif DATASET == "BikeNYC":
-        NODE_NUM = 128
-    elif DATASET == "SIGIR_solar":
-        NODE_NUM = 137
-    elif DATASET == "SIGIR_electric":
-        NODE_NUM = 321
-    parser = argparse.ArgumentParser(description="PyTorch dataloader")
-    parser.add_argument("--dataset", default=DATASET, type=str)
-    parser.add_argument("--num_nodes", default=NODE_NUM, type=int)
-    parser.add_argument("--val_ratio", default=0.1, type=float)
-    parser.add_argument("--test_ratio", default=0.2, type=float)
-    parser.add_argument("--lag", default=12, type=int)
-    parser.add_argument("--horizon", default=12, type=int)
-    parser.add_argument("--batch_size", default=64, type=int)
-    args = parser.parse_args()
-    train_dataloader, val_dataloader, test_dataloader, scaler = get_dataloader(
-        args, normalizer="std", tod=False, dow=False, weather=False, single=True
+    return (
+        train_dataloader,
+        val_dataloader,
+        test_dataloader,
+        scaler,
     )

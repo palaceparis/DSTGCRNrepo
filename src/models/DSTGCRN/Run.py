@@ -1,17 +1,14 @@
 import torch
 import torch.nn as nn
-from AGCRN import AGCRN as Network
+from DSTGCRN import DSTGCRN as Network
 from BasicTrainer import Trainer
 from lib.dataloader import get_dataloader
 import hydra
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 import logging
-import os
 
 import random
 import numpy as np
-from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
-import math
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 @hydra.main(
     version_base=None,
     config_path="../../configuration/modules",
-    config_name="AGCRN_time_dependent_lapalcian",
+    config_name="DSTGCRN",
 )
 def main(args: DictConfig) -> None:
     # Random seed
@@ -119,7 +116,7 @@ def main(args: DictConfig) -> None:
         test_loss = trainer.test(
             model, trainer.args, trainer.test_loader, trainer.scaler, trainer.logger
         )
-        return {"loss": test_loss, "status": STATUS_OK}
+        return test_loss
     else:
         # Train from the start
         trainer = Trainer(

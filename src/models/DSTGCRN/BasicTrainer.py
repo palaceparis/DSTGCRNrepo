@@ -34,7 +34,7 @@ class Trainer(object):
         self.args = args
         self.lr_scheduler = lr_scheduler
         self.best_path = os.path.join(self.args.log_dir, "best_model.pth")
-        self.logger = logging.getLogger("AGCRN_dynamic")
+        self.logger = logging.getLogger("DSTGCRN")
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

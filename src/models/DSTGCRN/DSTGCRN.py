@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import MultiheadAttention
 from collections import OrderedDict
-import numpy as np
 
 dynamic_embed = None
 
@@ -261,9 +260,9 @@ class DynamicEmbedding(nn.Module):
         return attn_output
 
 
-class AGCRN(nn.Module):
+class DSTGCRN(nn.Module):
     def __init__(self, args):
-        super(AGCRN, self).__init__()
+        super(DSTGCRN, self).__init__()
         self.num_node = args.dataset.num_nodes
         self.input_dim = args.dataset.input_dim
         self.hidden_dim = args.rnn_units
