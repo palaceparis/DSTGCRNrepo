@@ -47,18 +47,6 @@ hydra:
     dir: outputs/AGCRN_time_dependent_matrix_laplacian/${now:%m-%d_%H-%M-%S}
 log_dir: outputs/AGCRN_time_dependent_matrix_laplacian/${now:%m-%d_%H-%M-%S}
 
-# wandb
-wandb_dir: outputs/AGCRN_time_dependent_matrix_laplacian/${now:%m-%d_%H-%M-%S}
-run_name: ${now:%m-%d_%H-%M-%S}
-wandb_mode: "run"
-
-# data
-
-# In seperate files
-# emissions: data/interim/emissions.csv
-# eu_emissions: data/interim/eu_emi.csv
-# us_emissions: data/interim/us_emi.csv
-
 defaults:
   - dataset: CN
 
