@@ -1,6 +1,6 @@
 # Dynamic Spatial-Temporal Model for Carbon Emission Forecasting
 
-This repository contains the implementation of the model Dynamic Spatial-Temporal Graph Convolutional Recurrent Network (DSTGCRN) presented in the paper "Dynamic Spatial-Temporal Model for Carbon Emission Forecasting".
+This repository contains the implementation of the model Dynamic Spatial-Temporal Graph Convolutional Recurrent Network (DSTGCRN) presented in the manuscript "Dynamic Spatial-Temporal Model for Carbon Emission Forecasting".
 
 ## Table of Contents
 
